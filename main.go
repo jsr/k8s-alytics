@@ -47,6 +47,29 @@ var resources = map[string]string{
 	"CronJob":                   "\"Kind: CronJob\"",
 	"ExternalAdmissionHookConfiguration": "\"Kind: ExternalAdmissionHookConfiguration\"",
 	"InitializerConfiguration":           "\"Kind: InitializerConfiguration\"",
+	"Volume - emptyDir":                  "\"Kind: Pod\" volume emptyDir",
+	"Volume - hostPath":                  "\"Kind: Pod\" volume hostPath",
+	"Volume - gcePersistentDisk":         "\"Kind: Pod\" volume gcePersistentDisk",
+	"Volume - awsElasticBlockStore":      "\"Kind: Pod\" volume awsElasticBlockStore",
+	"Volume - nfs":                       "\"Kind: Pod\" volume nfs",
+	"Volume - iscsi":                     "\"Kind: Pod\" volume iscsi",
+	"Volume - fc":                        "\"Kind: Pod\" volume fc",
+	"Volume - flocker":                   "\"Kind: Pod\" volume flocker",
+	"Volume - glusterfs":                 "\"Kind: Pod\" volume glusterfs",
+	"Volume - rbd":                       "\"Kind: Pod\" volume rbd",
+	"Volume - cephfs":                    "\"Kind: Pod\" volume cephfs",
+	"Volume - gitRepo":                   "\"Kind: Pod\" volume gitRepo",
+	"Volume - secret":                    "\"Kind: Pod\" volume secret",
+	"Volume - persistentVolumeClaim":     "\"Kind: Pod\" volume persistentVolumeClaim",
+	"Volume - downwardAPI":               "\"Kind: Pod\" volume downwardAPI",
+	"Volume - projected":                 "\"Kind: Pod\" volume projected",
+	"Volume - azureFileVolume":           "\"Kind: Pod\" volume azureFileVolume",
+	"Volume - azureDisk":                 "\"Kind: Pod\" volume azureDisk",
+	"Volume - vsphereVolume":             "\"Kind: Pod\" volume vsphereVolume",
+	"Volume - Quobyte":                   "\"Kind: Pod\" volume Quobyte",
+	"Volume - PortworxVolume":            "\"Kind: Pod\" volume PortworxVolume",
+	"Volume - ScaleIO":                   "\"Kind: Pod\" volume ScaleIO",
+	"Volume - local":                     "\"Kind: Pod\" volume local",
 }
 
 func readToken() string {
@@ -79,15 +102,20 @@ func main() {
 
 	for resource, query := range resources {
 		query += " language:yaml language:json"
-		result, _, err := client.Search.Code(context.Background(), query, nil)
-		if err != nil {
-			fmt.Println(err)
-			return
+
+		var result *github.CodeSearchResult
+		var err error
+
+		for {
+			result, _, err = client.Search.Code(context.Background(), query, nil)
+			if err != nil {
+				time.Sleep(5 * time.Second)
+			} else {
+				break
+			}
 		}
+
 		url := "https://github.com/search?q=" + url.QueryEscape(query) + "&type=Code"
 		fmt.Printf("%s, %d, %s\n", resource, result.GetTotal(), url)
-
-		// We're rate limited to 30 searches per minute...
-		time.Sleep(4 * time.Second)
 	}
 }
